@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catering & Hotel MCQs Quiz</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configure Tailwind for a fun look -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary-blue': '#4F46E5',
+                        'success-green': '#10B981',
+                        'error-red': '#EF4444',
+                        'bg-light': '#F9FAFB',
+                        'accent-pink': '#EC4899',
+                        'gemini-purple': '#8B5CF6',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom animation for the feedback message */
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+        .feedback-message {
+            animation: popIn 0.5s ease-out;
+        }
+        /* Ensures body covers full screen height for centering, crucial for mobile view */
+        .min-h-screen {
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body class="bg-bg-light min-h-screen flex items-center justify-center p-4" style="background: linear-gradient(135deg, #F0F9FF, #DBEAFE);">
+    <!-- The container uses w-full and max-w-lg to scale beautifully on mobile. p-6 is sufficient padding. -->
+    <div id="quiz-container" class="w-full max-w-lg bg-white shadow-2xl rounded-xl p-6 sm:p-8 transform transition duration-500 hover:shadow-primary-blue/50">
+
+        <!-- Quiz Header -->
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-primary-blue mb-4 text-center">
+            😘😊 Chotu's Special Quiz
+        </h1>
+        <p class="text-center text-gray-600 mb-6 border-b pb-4">Test your knowledge with 10 random questions!</p>
+
+        <!-- Quiz Area (Initial State or Question/Result) -->
+        <div id="quiz-area">
+            <!-- Content will be injected here -->
+        </div>
+
+        <!-- Feedback Message Area -->
+        <div id="feedback" class="text-center text-xl font-bold mt-4 h-8"></div>
+    </div>
+
+    <script>
+        // --- Gemini API Configuration (IMPORTANT: API Key is left blank for the environment to provide it) ---
+        const apiKey = ""; 
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+        
+        // --- Full Data Set from Topics 1-16 ---
+        // The questions are structured with the correct answer being the letter (A, B, C, D)
+        const fullQuizData = [
+            // Topic 1: Introduction to Catering and Hotel Industry
+            { topic: "Hotel Industry", question: "A hotel that provides accommodation, restaurants, a bar, and beauty salons is defined as a:", options: ["Lodge", "Resort", "Bed and Breakfast", "Small Institution"], correct: "B" },
+            { topic: "Hotel Industry", question: "Which department in a 5-star hotel is primarily responsible for welcoming guests and recording room allotments?", options: ["Department of Administration", "Catering and Culinary", "Sales and Promotion", "Reception"], correct: "D" },
+            { topic: "Hotel Industry", question: "The Catering and Culinary Department in a hotel is where:", options: ["Guests are served food", "Bills are processed", "Chefs prepare different types of national cuisine", "Raw materials are stored"], correct: "C" },
+            { topic: "Hotel Industry", question: "Which department is responsible for cleaning all staff uniforms and guest clothes?", options: ["Department of Human Resource Development", "Department of Health and Welfare", "Procurement Department", "Laundry Department (Implied by the function)"], correct: "D" },
+            { topic: "Hotel Industry", question: "The Procurement Department's main task is to:", options: ["Procure the necessary materials for all other departments", "Maintain daily budgeting details", "Handle guest accounts", "Repair electrical appliances"], correct: "A" },
+            { topic: "Hotel Industry", question: "Daily budgeting details of the hotel are maintained by the:", options: ["Sales and Promotion Department", "Procurement Department", "Department of Finance", "Administration Department"], correct: "C" },
+            { topic: "Hotel Industry", question: "The Sales and Promotion Department takes steps primarily to:", options: ["Recruit new staff", "Increase sales of rooms and food", "Control costs", "Develop new recipes"], correct: "B" },
+            { topic: "Hotel Industry", question: "The term 'Kausal Balam' found on the cover generally translates to:", options: ["Quality Food", "Guest is God", "Skill is Strength", "Modern Training"], correct: "C" },
+
+            // Topic 2: Introduction of Kitchen, Objective of Cooking, Career Opportunities
+            { topic: "Kitchen Introduction", question: "Which specialized kitchen is responsible for cutting various types of meat and fish as per the requirement of all other cooking sections?", options: ["Garde Manger", "Continental Kitchen", "Pantry", "Butchery"], correct: "D" },
+            { topic: "Kitchen Introduction", question: "What is one crucial purpose of cooking related to food safety?", options: ["Easing the digesting process", "Enhancing the taste and aroma", "Destroys invisible bacteria and viruses in food", "Preserving nutritional quality"], correct: "C" },
+            { topic: "Kitchen Introduction", question: "The Garde Manger kitchen specializes in preparing and serving:", options: ["North Indian and Mughlai cuisines", "Cold dishes made with vegetables, fruits, and meats", "Breads and biscuits", "Western hot cuisine"], correct: "B" },
+            { topic: "Kitchen Introduction", question: "In which career field can a trainee work in canteens within schools, colleges, and factories?", options: ["Transport Catering", "Commercial Catering", "Welfare Catering", "Institutional Catering"], correct: "C" },
+            { topic: "Kitchen Introduction", question: "The section of the kitchen where cold and hot drinks, and sandwiches, are typically prepared is the:", options: ["Bakery", "Garde Manger", "Butchery", "Pantry"], correct: "D" },
+            { topic: "Kitchen Introduction", question: "Which kitchen sub-division typically serves South Indian, North Indian, and Mughlai cuisines?", options: ["Continental Kitchen", "Butchery", "Indian Cuisine", "Chinese Cuisine"], correct: "C" },
+            { topic: "Kitchen Introduction", question: "Which of the following is considered a career opportunity under Transport Catering?", options: ["Wedding canteens", "Restaurants", "Fast foods", "Aircraft catering"], correct: "D" },
+            { topic: "Kitchen Introduction", question: "Which two main types of food are produced in the Bakery and Confectionery section?", options: ["Meat and cold cuts", "Asian and Western dishes", "Breads/biscuits and cold food (confectionery)", "Salads and dressings"], correct: "C" },
+
+            // Topic 3: First Aids for Cuts, Burns and It's Importance
+            { topic: "First Aid", question: "First aid is defined as immediate care and support given to an injured person to:", options: ["Immediately send them to a distant hospital", "Save life and prevent further deterioration", "Treat all injuries completely", "Perform immediate surgery"], correct: "B" },
+            { topic: "First Aid", question: "If an injured person is breathing, the first aider should generally place the person in the:", options: ["Sitting position", "Supine (lying on back) position", "Recovery position (lying on one side)", "Prone (lying face down) position"], correct: "C" },
+            { topic: "First Aid", question: "The 'A' in the ABC of first aid stands for:", options: ["Assessment", "Airway", "Attention", "Antiseptic"], correct: "B" },
+            { topic: "First Aid", question: "The objective of first aid described as preventing the situation from getting worse is:", options: ["Save Life", "Promote Recovery", "Prevent further harm", "Stop the bleeding"], correct: "C" },
+            { topic: "First Aid", question: "If a patient is bleeding, the immediate action a first aider should take is to:", options: ["Wipe away clotted blood", "Apply pressure to the injured area", "Give the patient water", "Wait for medical help"], correct: "B" },
+            { topic: "First Aid", question: "The crucial time period immediately after a traumatic medical problem, often referred to as the Golden Period, is the first:", options: ["60 minutes", "30 minutes", "10 minutes", "5 minutes"], correct: "B" },
+            { topic: "First Aid", question: "The state of unconsciousness without self-remembering, where a patient lies unable to hear or feel external stimuli, is called:", options: ["Paralysis", "Stroke", "Coma", "Epilepsy"], correct: "C" },
+            { topic: "First Aid", question: "What should never be done to an unconscious person according to first aid rules?", options: ["Give food or drink", "Call an ambulance", "Lay them on their back", "Apply pressure to a bleeding wound"], correct: "A" },
+
+            // Topic 4: Small, Medium and Large Equipment and Their Handling in Kitchen, Types of Knives and Usage
+            { topic: "Kitchen Equipment", question: "A Bainmarie operates by heating water to generate steam, which is then used to:", options: ["Cook food quickly", "Keep the food warm for a long time", "Fry food", "Slice vegetables"], correct: "B" },
+            { topic: "Kitchen Equipment", question: "The primary purpose of an Electric Potato Peeler in a commercial kitchen is to:", options: ["Cut potatoes into slices", "Peel large quantities of potatoes quickly", "Cook potatoes by steaming", "Mash potatoes for purees"], correct: "B" },
+            { topic: "Kitchen Equipment", question: "Which type of knife is characterized by a long blade and small holes, which help prevent the fat and juices of the meat from sticking to the blade?", options: ["Paring knife", "Chef knife", "Granton edge", "Wavy serrated edge"], correct: "C" },
+            { topic: "Kitchen Equipment", question: "What should be done with an electrical machine, such as a meat mincer, before cleaning it?", options: ["Run it on low speed", "Unplug it", "Cover the motor", "Only clean the exterior"], correct: "B" },
+            { topic: "Kitchen Equipment", question: "The Wavy Serrated Edge knife is best suited for cutting which type of food?", options: ["Raw meat with bones", "Hard cheese", "Soft materials (e.g., bread, tomatoes)", "Fish fillets"], correct: "C" },
+            { topic: "Kitchen Equipment", question: "Which piece of large equipment is essential for mixing large quantities of chapatti dough or bread dough?", options: ["Tilting Grinder", "Dough maker", "Meat mincer", "Electric potato peeler"], correct: "B" },
+            { topic: "Kitchen Equipment", question: "A Birds Beak Knife is primarily used for:", options: ["Chopping poultry", "Cutting bread rolls", "Peeling apples/oranges and various types of carving", "Deboning meat"], correct: "C" },
+            { topic: "Kitchen Equipment", question: "What action is explicitly recommended for safe food preparation in relation to using knives?", options: ["Use the knife for multiple tasks to save time.", "Use a sharp knife and sharpen it before starting work.", "Store all knives soaking in disinfectant water.", "Always use a damaged blade if no replacement is available."], correct: "B" },
+
+            // Topic 5: Personal Safety and Industrial Safety
+            { topic: "Safety & Hygiene", question: "What is a crucial step to check before starting an electrical machine?", options: ["That the machine is properly lubricated", "Whether the power supply is off or on", "That all the ingredients are pre-measured", "The temperature of the machine"], correct: "B" },
+            { topic: "Safety & Hygiene", question: "Why should one avoid operating electrical appliances with wet hands?", options: ["It can damage the appliance.", "It will cause the food to taste metallic.", "It can cause electrical shock or injury.", "It voids the machine's warranty."], correct: "C" },
+            { topic: "Safety & Hygiene", question: "According to kitchen safety tips, how long should perishable foods not be left out?", options: ["More than 30 minutes", "More than 1 hour", "More than 2 hours", "More than 4 hours"], correct: "C" },
+            { topic: "Safety & Hygiene", question: "If sampling food, a key rule is to:", options: ["Use a new spoon for every sample", "Only taste when the food is at room temperature", "Wash the spoon before it goes back in the food", "Use your finger for a quick taste check"], correct: "A" },
+            { topic: "Safety & Hygiene", question: "To prevent the risk of machinery entangling, an employee should:", options: ["Use only manual tools", "Dress appropriately for work, avoiding inappropriate clothing", "Work quickly around the machine", "Always work in pairs"], correct: "B" },
+            { topic: "Safety & Hygiene", question: "The prevention of bacteria involves fully cooking recipes with:", options: ["Spices and herbs", "Eggs, meat and poultry", "Flour and water", "Dairy products"], correct: "B" },
+            { topic: "Safety & Hygiene", question: "When cleaning a machine, one must first:", options: ["Call for the maintenance team", "Know how to clean it", "Put on rubber boots", "Wait for the machine to warm up"], correct: "B" },
+            { topic: "Safety & Hygiene", question: "\"Wash Often\" in kitchen safety tips refers primarily to:", options: ["Appliances", "Floors", "Hands", "Uniforms"], correct: "C" },
+
+            // Topic 6: Personal Hygiene and Sanitation
+            { topic: "Personal Hygiene", question: "Sanitation must originate from where to be a living system?", options: ["External laws and regulations", "Financial incentives", "People's minds (as a living system)", "Government standards"], correct: "C" },
+            { topic: "Personal Hygiene", question: "Why is the personal cleanliness of a hotel worker important?", options: ["It helps in management control.", "Customers expect quality food and elegant service in a hygienic manner.", "It increases the speed of work.", "It reduces energy consumption."], correct: "B" },
+            { topic: "Personal Hygiene", question: "Which item should be avoided by kitchen staff while on duty?", options: ["Protective aprons", "Clean uniforms", "Rings or watches", "Short hair caps"], correct: "C" },
+            { topic: "Personal Hygiene", question: "How should a chef cover a sneeze or cough in the food preparation area?", options: ["With their hands", "By turning away quickly", "With a tissue, followed by washing hands", "With their apron"], correct: "C" },
+            { topic: "Personal Hygiene", question: "A personal hygiene rule states that fingernails must be kept:", options: ["Polished", "Long and decorative", "Trimmed and clean", "Soaked in disinfectant"], correct: "C" },
+            { topic: "Personal Hygiene", question: "The ultimate goal of maintaining high-quality hygiene is to protect the health of:", options: ["The management only", "The building structure", "Customers and employees", "Raw material suppliers"], correct: "C" },
+            { topic: "Personal Hygiene", question: "Which activity is strictly prohibited in the food preparation area?", options: ["Washing hands", "Smoking or chewing tobacco", "Prepping vegetables", "Wearing gloves"], correct: "B" },
+            { topic: "Personal Hygiene", question: "Why is cutting one's hair short a rule of hygiene?", options: ["To look professional", "To prevent hair from falling into the food.", "To improve ventilation", "To avoid hat hair"], correct: "B" },
+
+            // Topic 7: Hygiene Rule Codes (FSSAI)
+            { topic: "FSSAI Rules", question: "According to FSSAI rules, what condition must the food cart be kept in?", options: ["Easily movable", "Made of metal", "Clean and free from insects", "Air-conditioned"], correct: "C" },
+            { topic: "FSSAI Rules", question: "Hygiene Rule Code 3 states that raw materials and processed foods that are expired should not be:", options: ["Sold to the public", "Used", "Kept in the refrigerator", "Checked by a supervisor"], correct: "B" },
+            { topic: "FSSAI Rules", question: "When handling food and raw materials, what action should be performed frequently?", options: ["Wash hands", "Change uniforms", "Consult the head chef", "Take samples"], correct: "A" },
+            { topic: "FSSAI Rules", question: "If a person has fever and illness, they should not engage in which activity?", options: ["Using the employee cafeteria", "Entering the hotel lobby", "Handle food", "Use the time clock"], correct: "C" },
+            { topic: "FSSAI Rules", question: "The process of waste disposal requires using:", options: ["Metal buckets", "Dustbins accordingly (sorted)", "A single large container", "Only plastic bags"], correct: "B" },
+            { topic: "FSSAI Rules", question: "The FSSAI is a statutory body established under the Ministry of:", options: ["Skill Development & Entrepreneurship", "Commerce and Industry", "Health and Family Welfare", "Consumer Affairs"], correct: "C" },
+            { topic: "FSSAI Rules", question: "Which law did the FSSAI establish under in 2006?", options: ["Prevention of Food Adulteration Act", "Weights and Measures Act", "Food Safety and Standards Act 2006", "Essential Commodities Act"], correct: "C" },
+            { topic: "FSSAI Rules", question: "What is the key function of the FSSAI?", options: ["Importing and exporting food", "Protecting and promoting public health through regulation of food safety", "Running hotel canteens", "Training food handlers"], correct: "B" },
+
+            // Topic 8: Food Handlers Hygiene Protective Clothing
+            { topic: "Protective Clothing", question: "A Chef Coat must be worn by cooks in the kitchen primarily because:", options: ["It looks professional", "There is a possibility of splattering hot objects on them", "It is a sign of authority", "It helps in keeping them cool"], correct: "B" },
+            { topic: "Protective Clothing", question: "The recommended material for a chef coat and pant is:", options: ["Polyester", "Silk", "Cotton fabric", "Denim"], correct: "C" },
+            { topic: "Protective Clothing", question: "The main function of a Scarf worn around the neck by a food artist is to:", options: ["Complete the uniform look", "Keep sweat from getting into the food", "Keep the neck warm", "Carry small tools"], correct: "B" },
+            { topic: "Protective Clothing", question: "What is the purpose of the Chef Cap?", options: ["To denote the rank of the chef", "To keep hair from falling into the food", "To absorb ambient heat", "To hold the communication headset"], correct: "B" },
+            { topic: "Protective Clothing", question: "An apron worn by a chef in the kitchen primarily serves as a:", options: ["Duster", "Protective cover", "Decoration", "Storage pocket"], correct: "B" },
+            { topic: "Protective Clothing", question: "For safety reasons, what must a worker wear while operating in the kitchen?", options: ["Casual sandals", "Safe footwear (e.g., non-slip, closed-toe)", "Open-toed shoes", "Slip-ons"], correct: "B" },
+            { topic: "Protective Clothing", question: "Chef coats are traditionally worn in which color?", options: ["Black", "White", "Red", "Grey"], correct: "B" },
+            { topic: "Protective Clothing", question: "Which piece of protective clothing helps absorb sweat around the neck area?", options: ["Apron", "Chef Cap", "Scarf", "Chef Coat"], correct: "C" },
+
+            // Topic 9: Preparedness for Emergency Situations, Waste Management
+            { topic: "Emergency & Waste", question: "A Bomb Threat is classified as a type of:", options: ["Safety violation", "Financial loss", "State of emergency", "Waste problem"], correct: "C" },
+            { topic: "Emergency & Waste", question: "In emergency preparedness, all employees should act according to the training given by which department?", options: ["Procurement Department", "Finance Department", "Human Resource Development Department", "Engineering Department"], correct: "C" },
+            { topic: "Emergency & Waste", question: "Which type of waste is designated for the Green plastic dustbin?", options: ["Metal cans", "Broken ceramic plates", "Non-recyclable plastics", "Vegetables, fruits, meats and food waste"], correct: "D" },
+            { topic: "Emergency & Waste", question: "The Blue plastic bin is used for the disposal of:", options: ["Dry food waste", "Non-recyclable plastic bottles, cans and plastic covers", "Glassware", "Cardboard boxes"], correct: "B" },
+            { topic: "Emergency & Waste", question: "What can be placed in the White plastic dustbin?", options: ["Metal cans only", "Broken glasses and pieces of ceramic plates", "Garden clippings", "Used oil"], correct: "B" },
+            { topic: "Emergency & Waste", question: "A key reason for proper waste management is that waste can only be sorted and disposed of if the employee is aware of the:", options: ["Hotel's profit margin", "Day's menu", "Waste management procedure", "Chef's shift schedule"], correct: "C" },
+            { topic: "Emergency & Waste", question: "Handling drunken guests is listed as a type of:", options: ["Daily routine", "Minor inconvenience", "Emergency situation", "Security lapse"], correct: "C" },
+            { topic: "Emergency & Waste", question: "Non-recyclable solid materials listed include:", options: ["Foodstuffs", "Plastic bottles and covers", "Fruits and vegetables", "Used oil"], correct: "B" },
+
+            // Topic 10: Methods of Mixing Food, Effect of Heat on Various Foods
+            { topic: "Cooking Methods", question: "The process of mixing liquids with each other while adding air, such as when preparing eggs, is called:", options: ["Blending", "Cutting", "Beating", "Folding"], correct: "C" },
+            { topic: "Cooking Methods", question: "The method of incorporating flour and butter with a knife, typically used for pie or biscuit dough, is called:", options: ["Beating", "Folding", "Cutting", "Stirring"], correct: "C" },
+            { topic: "Cooking Methods", question: "Mixing softened butter and sugar by friction, typically using a wooden spoon to create a cake mix, is known as:", options: ["Blending", "Folding", "Creaming", "Kneading"], correct: "C" },
+            { topic: "Cooking Methods", question: "The method of mixing liquids and solids together from top to bottom, exemplified by sponge cake preparation, is called:", options: ["Stirring", "Cutting", "Folding", "Beating"], correct: "C" },
+            { topic: "Cooking Methods", question: "When pure sugar is heated, it undergoes various states and specifically caramelizes at what temperature?", options: ["$100^{\circ}$ C", "$125^{\circ}$ C", "$163^{\circ}$ C", "$200^{\circ}$ C"], correct: "C" },
+            { topic: "Cooking Methods", question: "The heat applied during cooking causes the protein in food to:", options: ["Dissolve into the water", "Curdle (coagulate)", "Release fat instantly", "Turn white instantly"], correct: "B" },
+            { topic: "Cooking Methods", question: "When cooking a poached egg, the egg white cooks before the yolk because:", options: ["It contains less fat", "It contains less water", "It contains more protein", "It is exposed to less heat"], correct: "C" },
+            { topic: "Cooking Methods", question: "To prevent oil from charring after deep-fat frying, one should:", options: ["Add more salt to the oil", "Filter the used oil before reheating", "Store the oil in a plastic container", "Immediately discard the oil"], correct: "B" },
+
+            // Topic 11: Weighting and Measures, Texture of Food
+            { topic: "Weighting & Texture", question: "What equipment is essential for measuring the correct amount of solids and liquids for food preparation?", options: ["Scoops only", "Weighing machines and measuring jugs", "Only spoons", "Density meters"], correct: "B" },
+            { topic: "Weighting & Texture", question: "The term Texture in the context of food describes:", options: ["The cost of the ingredients", "The food's color and aroma", "The nature of the cooked food", "The serving temperature"], correct: "C" },
+            { topic: "Weighting & Texture", question: "A cake characterized as Soft and Malleable due to the addition of air is referred to as having a:", options: ["Crumbly texture", "Flaky texture", "Tough texture", "Sponge texture"], correct: "D" },
+            { topic: "Weighting & Texture", question: "Which texture is suitable for foods where butter and gas lumps form a layer?", options: ["Tough", "Sponge", "Flaky", "Light and even"], correct: "C" },
+            { topic: "Weighting & Texture", question: "Serving the right amount of food using consistent ingredients in a commercial setting is called:", options: ["Menu Engineering", "Recipe Balancing", "Portion Control", "Food Costing"], correct: "C" },
+            { topic: "Weighting & Texture", question: "Which unit of measure can a weighing machine measure solids in?", options: ["Litres and milligrams", "Grams and ounces", "Pounds and quarts", "Kilograms and cubic meters"], correct: "B" },
+            { topic: "Weighting & Texture", question: "An objective of portion control is to:", options: ["Increase the food preparation time", "Serve the right amount of food to all customers", "Minimize the use of weighing scales", "Increase the menu variety"], correct: "B" },
+            { topic: "Weighting & Texture", question: "If there is a mistake in portion control and weight, the result will be:", options: ["Increased sales", "A smoother operation", "Customer dissatisfaction and loss of business", "Higher food quality"], correct: "C" },
+
+            // Topic 12: Cutting Techniques
+            { topic: "Cutting Techniques", question: "Brunoise is a cutting method used primarily as a garnish for which food item?", options: ["Roast beef", "Consommé soups", "Flaky pastry", "Indian curries"], correct: "B" },
+            { topic: "Cutting Techniques", question: "The Chiffonade technique involves cutting which type of vegetables?", options: ["Root vegetables like carrots", "Potatoes and onions", "Spinach and lettuce leaves into thin strips", "Meats and fish fillets"], correct: "C" },
+            { topic: "Cutting Techniques", question: "The Julienne cut is characterized by a shape similar to a long:", options: ["Dice", "Sphere", "Triangle", "Matchstick"], correct: "D" },
+            { topic: "Cutting Techniques", question: "In the Macedoine cut, vegetables and fruits are cut into pieces of what approximate size?", options: ["1mm cubes", "10mm sticks", "6 to 8 mm pieces", "25mm slices"], correct: "C" },
+            { topic: "Cutting Techniques", question: "What is the purpose of preparing vegetables using the Matignon technique?", options: ["To make a clear stock", "To dry out the vegetables", "To enhance the aroma and flavor of meats", "To remove all fat"], correct: "C" },
+            { topic: "Cutting Techniques", question: "The ingredients that constitute a basic Mirepoix mixture are:", options: ["Garlic, ginger, chilies", "Onions, celery, carrots (sautéed in butter)", "Mushrooms, bell peppers, tomatoes", "Potatoes, rice, and stock"], correct: "B" },
+            { topic: "Cutting Techniques", question: "Cutting vegetables and meat into very fine pieces is called:", options: ["Slicing", "Shredding", "Dicing", "Mincing"], correct: "D" },
+            { topic: "Cutting Techniques", question: "The term Dicing refers to the technique of cutting ingredients into small:", options: ["Strips", "Batons", "Cubes", "Spheres"], correct: "C" },
+
+            // Topic 13: Yield Management
+            { topic: "Yield Management", question: "In culinary terms, Yield primarily refers to:", options: ["The revenue generated from a dish", "The time taken to prepare a dish", "How much of a finished or processed product you will have", "The cost of the raw ingredients"], correct: "C" },
+            { topic: "Yield Management", question: "If a recipe calls for 1 kg of whole carrots, but only 800 grams are used after peeling and trimming, the 800 grams represents the:", options: ["Potential yield", "Actual usable yield", "Waste percentage", "Purchase specification"], correct: "B" },
+            { topic: "Yield Management", question: "A primary objective of yield management is to establish a standard for the size and number of:", options: ["Raw material purchases", "Portions available from a particular food", "Chef's work hours", "Total restaurant guests"], correct: "B" },
+            { topic: "Yield Management", question: "Yield management helps assist in menu costing and:", options: ["Ingredient storage", "Staff hiring", "Pricing", "Marketing strategies"], correct: "C" },
+            { topic: "Yield Management", question: "The objective 'To set control standards' is listed under the importance of:", options: ["Menu planning", "Production (Yield)", "Hygiene", "Machine maintenance"], correct: "B" },
+            { topic: "Yield Management", question: "Which color chopping board is typically used for dairy and bakery products?", options: ["Red", "Blue", "Brown", "White"], correct: "D" },
+            { topic: "Yield Management", question: "The use of a Blue Chopping Board is mandatory for:", options: ["Cooked poultry", "Vegetables", "Seafood", "Raw meat"], correct: "C" },
+            { topic: "Yield Management", question: "Why is using color-coded labels on chopping boards a common way to reduce food safety hazards?", options: ["It makes the kitchen look appealing.", "It helps in preventing cross-contamination", "It speeds up the preparation time.", "It reduces the need for frequent cleaning."], correct: "B" },
+
+            // Topic 14: Layout of Kitchen and Different Sections
+            { topic: "Kitchen Layout", question: "The kitchen layout concept where machines and workspaces are set up in a straight line is:", options: ["'U' shape arrangement", "'L' shape arrangement", "Straight-line arrangement", "Galley kitchen"], correct: "C" },
+            { topic: "Kitchen Layout", question: "The recommended minimum width for a footpath in a commercial kitchen is:", options: ["24 inches", "42 inches", "60 inches", "72 inches"], correct: "B" },
+            { topic: "Kitchen Layout", question: "In the context of the Task Triangle design, which three main areas should be kept in mind?", options: ["Cooking, Serving, Cleaning", "Pantry, Butchery, Garde Manger", "Refrigerator, Stove, Sink", "Storage, Prep, Cooking"], correct: "C" },
+            { topic: "Kitchen Layout", question: "The total size of the kitchen should be what percentage of the size of the serving area?", options: ["10% to 15%", "25% to 33%", "50% to 60%", "75% to 85%"], correct: "B" },
+            { topic: "Kitchen Layout", question: "What material should the walls of a kitchen be tiled with, and to what minimum height?", options: ["Blue tiles, 6 feet high", "Metallic panels, 4 feet high", "White colored tiles, to a height of 8 feet", "Stone slabs, floor to ceiling"], correct: "C" },
+            { topic: "Kitchen Layout", question: "The two main rooms reserved for making bakery products are for making:", options: ["Bread and Cakes", "Cookies and Pastries", "Hot bakery products and cold stuff", "Dough and Glazes"], correct: "C" },
+            { topic: "Kitchen Layout", question: "The Chef's Room is typically located in the middle of the kitchen so that:", options: ["The head chef is isolated", "All the kitchen staff can see the work", "The room can be kept very cold", "It is near the main entrance"], correct: "B" },
+            { topic: "Kitchen Layout", question: "The Kitchen Stewarding Officer is primarily in charge of the:", options: ["Menu planning", "Guest reception area", "Dirty utensils cleaning room", "Raw material procurement"], correct: "C" },
+
+            // Topic 15: Cuts of Fish, Meat, etc.
+            { topic: "Cuts of Meat & Fish", question: "A method of cutting round fish with the bone in the stack method is called:", options: ["Fillet", "Supreme", "Darne", "Paupiette"], correct: "C" },
+            { topic: "Cuts of Meat & Fish", question: "Fillets are defined as cuts of meat (fish, poultry, meats) where:", options: ["The bone is present", "The skin and bones are removed, leaving only the flesh", "The meat is cut into small cubes", "The meat is rolled and tied"], correct: "B" },
+            { topic: "Cuts of Meat & Fish", question: "Which part of the chicken is commonly referred to as white meat?", options: ["Thigh and legs", "Carcass and drumsticks", "Wings and breast", "Liver and gizzard"], correct: "C" },
+            { topic: "Cuts of Meat & Fish", question: "Colbert is a method of preparing fish where:", options: ["Only the tail is removed", "The fish is chopped into small cubes", "The whole fish is deboned without removing the bones and head", "The fillets are rolled with spices"], correct: "C" },
+            { topic: "Cuts of Meat & Fish", question: "The portion of chicken that is best suited for making stock water for cooking is the:", options: ["Breast", "Thigh", "Drumstick", "Carcass"], correct: "D" },
+            { topic: "Cuts of Meat & Fish", question: "Meats that are tougher and less expensive are made tender and more flavorful by which cooking method?", options: ["Grilling", "Frying", "Stewing/Boiling", "Roasting"], correct: "C" },
+            { topic: "Cuts of Meat & Fish", question: "The term Troncon is the name for cutting which type of fish?", options: ["Round fish", "Shellfish", "Flat fish into a steak form with the bone attached", "Boneless fish"], correct: "C" },
+            { topic: "Cuts of Meat & Fish", question: "Which cut of beef is described as the meat from the knee to the foot?", options: ["Fillet", "Sirloin", "Shank portion", "Rump"], correct: "C" },
+
+            // Topic 16: Non-Conventional Methods: Solar, Microwave, and Fast Food Cooking
+            { topic: "Non-Conventional Cooking", question: "Food cooked using an Infrared Cooking method is primarily heated by which two forms of energy transfer?", options: ["Conduction and Convection", "Convection and Radiation", "Induction and Convection", "Sublimation and Radiation"], correct: "B" },
+            { topic: "Non-Conventional Cooking", question: "In a Microwave oven, the heat is generated when the electric current causes which molecules in the food to vibrate?", options: ["Protein and minerals", "Cellulose and fiber", "Water, fat, and sugar", "Glass and ceramic"], correct: "C" },
+            { topic: "Non-Conventional Cooking", question: "Microwave-safe utensils are essential because the waves do not affect which materials?", options: ["Iron and copper", "Glass and ceramic vessels", "Aluminum and steel", "Plastic and foam"], correct: "B" },
+            { topic: "Non-Conventional Cooking", question: "The device inside a microwave oven that helps in heating the food items is the:", options: ["Thermometer", "Transformer", "Magnetron", "Convection fan"], correct: "C" },
+            { topic: "Non-Conventional Cooking", question: "In a Solar Oven, the inner cooking compartment is painted black because:", options: ["Black is a traditional cooking color", "Black color attracts sunlight", "It prevents rust", "It is easier to clean"], correct: "B" },
+            { topic: "Non-Conventional Cooking", question: "The mirrors fitted on solar ovens serve to:", options: ["Cool the oven", "Reflect rays from the sun to the cooking compartment (increasing speed)", "Prevent explosions", "Measure the sun's intensity"], correct: "B" },
+            { topic: "Non-Conventional Cooking", question: "Which additive is noted as enhancing the flavor in fast foods like pizza but is potentially harmful?", options: ["Baking soda", "Yeast", "Mono sodium gluconate (Chinese salt)", "Artificial color"], correct: "C" },
+            { topic: "Non-Conventional Cooking", question: "Which statement regarding nutrients is true concerning microwave cooking?", options: ["It causes significant nutrient loss in all foods.", "It takes less time to cook, and nutrients in vegetables do not escape easily.", "All nutrients are destroyed due to high heat.", "The vitamins are converted into fat."], correct: "B" }
+        ];
+
+        let quizData = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        const totalQuestions = 10; 
+
+        const quizArea = document.getElementById('quiz-area');
+        const feedbackEl = document.getElementById('feedback');
+        const optionLetters = ['A', 'B', 'C', 'D'];
+
+        /**
+         * Shuffles an array and selects a subset of unique elements.
+         * @param {Array} array The array to shuffle.
+         * @param {number} size The number of unique elements to select.
+         * @returns {Array} A new array containing the random subset.
+         */
+        function getRandomQuestions(array, size) {
+            let shuffled = array.slice();
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled.slice(0, size);
+        }
+
+        /**
+         * Starts the quiz by selecting random questions and initializing state.
+         */
+        function startGame() {
+            quizData = getRandomQuestions(fullQuizData, totalQuestions);
+            currentQuestionIndex = 0;
+            score = 0;
+            feedbackEl.innerHTML = '';
+            displayQuestion();
+        }
+
+        /**
+         * Renders the current question to the DOM.
+         */
+        function displayQuestion() {
+            if (currentQuestionIndex >= quizData.length) {
+                showResults();
+                return;
+            }
+
+            const currentQ = quizData[currentQuestionIndex];
+            const qNumber = currentQuestionIndex + 1;
+
+            let optionsHtml = currentQ.options.map((option, index) => {
+                const letter = optionLetters[index];
+                return `
+                    <button onclick="checkAnswer('${letter}')"
+                        class="option-btn w-full text-left bg-bg-light hover:bg-primary-blue hover:text-white text-gray-800 font-semibold py-3 px-4 mb-3 border border-gray-300 rounded-lg shadow-md transition duration-200 focus:outline-none focus:ring-4 focus:ring-primary-blue/50 transform hover:scale-[1.02]">
+                        <span class="font-bold text-accent-pink">${letter}:</span> ${option}
+                    </button>
+                `;
+            }).join('');
+
+            quizArea.innerHTML = `
+                <div class="mb-6">
+                    <p class="text-sm font-medium text-accent-pink mb-1">Topic: ${currentQ.topic}</p>
+                    <p class="text-xl font-bold text-gray-900 mb-4">Question ${qNumber} of ${totalQuestions}:</p>
+                    <p class="text-lg text-gray-700 p-4 bg-blue-50/50 rounded-lg border-l-4 border-primary-blue shadow-inner">${currentQ.question}</p>
+                </div>
+                
+                <div id="options-list">
+                    ${optionsHtml}
+                </div>
+            `;
+        }
+        
+        
+        
+        /**
+         * Checks the user's selected answer against the correct answer.
+         * @param {string} selectedOption - The letter of the selected option (A, B, C, D).
+         */
+        function checkAnswer(selectedOption) {
+            const currentQ = quizData[currentQuestionIndex];
+            const isCorrect = selectedOption === currentQ.correct;
+            const correctOptionIndex = optionLetters.indexOf(currentQ.correct);
+            const correctOptionText = currentQ.options[correctOptionIndex];
+
+            // Disable all buttons immediately after selection
+            document.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+            
+            
+
+            // Display feedback message
+            if (isCorrect) {
+                score++;
+                feedbackEl.innerHTML = `
+                    <span class="feedback-message text-success-green text-2xl">
+                        🎉 Mera baby itnaaaa smart hai! 🎉
+                    </span>
+                `;
+            } else {
+                feedbackEl.innerHTML = `
+                    <span class="feedback-message text-error-red text-xl">
+                        🥺 Dhyan do bbe tum kr skti ho!
+                        <span class="text-gray-700 text-base block mt-1">
+                            (Correct: ${currentQ.correct}. ${correctOptionText})
+                        </span>
+                    </span>
+                `;
+            }
+
+            // Highlight buttons
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach((btn, index) => {
+                const letter = optionLetters[index];
+                btn.classList.remove('bg-bg-light', 'hover:bg-primary-blue', 'hover:text-white', 'text-gray-800');
+                btn.classList.add('cursor-default');
+
+                if (letter === currentQ.correct) {
+                    btn.classList.add('bg-success-green', 'text-white', 'shadow-lg');
+                } else if (letter === selectedOption && !isCorrect) {
+                    btn.classList.add('bg-error-red', 'text-white', 'shadow-lg');
+                } else {
+                    btn.classList.add('bg-gray-100', 'text-gray-500');
+                }
+            });
+
+
+            // Move to the next question after a delay
+            setTimeout(() => {
+                currentQuestionIndex++;
+                feedbackEl.innerHTML = '';
+                displayQuestion();
+            }, 2500); // 2.5 second delay to read the feedback
+        }
+
+        /**
+         * Displays the final quiz results.
+         */
+        function showResults() {
+            let emoji = '';
+            let message = '';
+            if (score === totalQuestions) {
+                emoji = '🤯';
+                message = 'A perfect score! You are unstoppable, my smart baby!';
+            } else if (score >= totalQuestions * 0.8) {
+                emoji = '🥳';
+                message = 'Superb performance! You know your stuff. Keep shining!';
+            } else if (score >= totalQuestions / 2) {
+                emoji = '👍';
+                message = 'Great job! You\'ve mastered more than half the material. Keep going!';
+            } else {
+                emoji = '💪';
+                message = 'You did well! Let\'s go through the material once more, you got this!';
+            }
+
+            quizArea.innerHTML = `
+                <div class="text-center p-6 bg-accent-pink/10 rounded-lg">
+                    <p class="text-6xl mb-4">${emoji}</p>
+                    <h2 class="text-3xl font-bold text-accent-pink mb-2">Quiz Finished!</h2>
+                    <p class="text-2xl font-extrabold text-gray-900 mb-4">
+                        Your Score: <span class="text-primary-blue">${score} / ${totalQuestions}</span>
+                    </p>
+                    <p class="text-lg text-gray-700">${message}</p>
+                </div>
+                <button onclick="startGame()"
+                    class="mt-6 w-full py-3 bg-primary-blue text-white font-bold rounded-lg shadow-xl hover:bg-primary-blue/90 transition duration-300 transform hover:scale-[1.01] focus:ring-4 focus:ring-primary-blue/50">
+                    Try Again (Get More Smart!)
+                </button>
+            `;
+            feedbackEl.innerHTML = '';
+        }
+
+        // Initialize the screen with a Start button
+        window.onload = function() {
+            quizArea.innerHTML = `
+                <div class="text-center p-6 border border-dashed border-primary-blue/50 rounded-lg bg-blue-50">
+                    <p class="text-2xl font-semibold text-gray-700 mb-4">Ready for the Challenge?</p>
+                    <p class="text-md text-gray-500 mb-6">You will be tested on 10 random questions from all 16 topics of Catering and Hotel Management.</p>
+                    
+                </div>
+                <button onclick="startGame()"
+                    class="mt-6 w-full py-4 bg-accent-pink text-white font-bold text-xl rounded-lg shadow-2xl hover:bg-accent-pink/90 transition duration-300 transform hover:scale-[1.03] focus:ring-4 focus:ring-accent-pink/50">
+                    Start Quiz Now!
+                </button>
+            `;
+        };
+
+    </script>
+</body>
+</html>
